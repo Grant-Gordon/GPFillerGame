@@ -5,25 +5,22 @@ public class Tile {
 	private String colorS;
 	private boolean grouped;
 
-	private static final String[] arrColors = {"black", "purple", "red", "yellow", "green", "blue"};
+	private static final String[] arrColors = {"BLACK", "PURPLE", "RED", "YELLOW", "GREEN", "BLUE"};
 	
+	//default constructor 
 	public Tile() {
 		this.colorS = "";
 		this.colorI = -1;
 		this.grouped = false;
 	}
+	//constructor with specific color
 	public Tile(int n) {
-		this.colorS = "";
+		this.colorS = Tile.arrColors[n];
 		this.colorI = n;
 		this.grouped = false;
 
 	}
-	public Tile(String s) {
-		this.colorS = s;
-		this.colorI = -1;
-		this.grouped = false;
 
-	}
 	
 	
 	// Setters
@@ -32,7 +29,7 @@ public class Tile {
 		this.grouped = b;
 	}
 	public void setColorI(int I) {
-		if(I >= arrColors.length) {
+		if(I >= arrColors.length || I<0) {
 			throw new IllegalArgumentException();
 		}
 		this.colorI = I;
@@ -40,13 +37,16 @@ public class Tile {
 	}
 	public void setColorS(String s) {
 		//Iterates arrColors if input is valid color, it is assigned, else exception thrown.
+		boolean found = false; //makes sure S is in arrColors
 		for (int i =0; i < arrColors.length; i++) {
 			if(s.equals(arrColors[i])) {
+				found = true;
 				this.colorS = s;
 				this.colorI = i;
-			}else {
-				throw new IllegalArgumentException();
 			}
+		}
+		if(found == false) {
+			throw new IllegalArgumentException();
 		}
 	}
 	//Getters

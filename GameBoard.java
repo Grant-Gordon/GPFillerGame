@@ -6,9 +6,16 @@ public class GameBoard {
 	private Tile[][] tileBoard;
 	private int[][] groupedBoard; // -1 grouped player1, 0 ungrouped, 1 grouped player2
 	private int boardSize;
+	private int movesPlayed;
+	private boolean player1Turn;
+	private int p1ColorI;
+	private int p2ColorI;
+	private int p1Score =0;
+	private int p2Score =0;
+	
 	 
 
-
+	//Defualt GameBoard Constructor 
 	public GameBoard() {
 		boardSize = defaultBoardSize;
 		//Pre-populate board with default(64) empty tiles
@@ -24,7 +31,7 @@ public class GameBoard {
 		groupedBoard[0][defaultBoardSize -1]= 1;
 		this.randomizeTileColors();
 	}
-	
+	//GameBoard Constructor of custom size
 	public  GameBoard(int size){
 		boardSize = size;
 		tileBoard = new Tile[size][size];
@@ -42,6 +49,18 @@ public class GameBoard {
 		this.randomizeTileColors();
 
 	}
+	public GameBoard(GameBoard b) {
+		tileBoard = b.getTileBoard();
+		groupedBoard = b.getGroupedBoard();
+		boardSize = b.getBoardSize();
+		movesPlayed = b.getMovesplayed();
+		player1Turn = b.getPlayer1Turn();
+		p1ColorI = b.getP1ColorI();
+		p2ColorI = b.getP2ColorI();
+		p1Score = b.getP1Score();
+		p2Score = b.getP2Score();
+	}
+	//checks if any tiles remain unclaimed by a player
 	public boolean containsUnGrouped() {
 		for(int[] i: this.groupedBoard) {
 			for (int j: i) {
@@ -52,16 +71,20 @@ public class GameBoard {
 		}
 		return false;
 	}
+	//Checks if tiles have been unassigned a color
 	public boolean containsBlanks() {
 		for (Tile[] r: this.tileBoard) {
 			for (Tile t: r) {
-				if(t.getColorI() == -1) {
+				if(t.getColorI() == -1 || t.getColorS() == "") {
 					return true;
 				}
 			}
 		}
 		return false;
 	}
+	
+	// Assign colors to tiles ensuring that colors do not match cardinal neighbors color. 
+	//call on gameBoard object
 	public void randomizeTileColors() {
 		/*
 		 * randomizes colors of each tile.
@@ -74,33 +97,36 @@ public class GameBoard {
 		//check left check top random 
 		for(int row = 0; row < this.boardSize; row++) {
 			for(int col =0; col < this.boardSize; col++) {
-				//if very [0][0] assign random color
+				//if [0][0] assign random color
 				if(row == 0 && col == 0) {
 					this.tileBoard[row][col].setColorI(random.nextInt(Tile.getArrColors().length));
 					
-					//if top in column
+					//if top row in column
 				}else if(row ==0) {
 					//start off setting random color
 					this.tileBoard[row][col].setColorI(random.nextInt(Tile.getArrColors().length));
-					//only check left 
-					//while tiles color = tiles to the left color, set tile color to new color 
+					//only check left because iterate left to right
+						//meaning tile to the right is unassigned, eliminating unnecessary checks
+					//while tiles color == tiles to the left color, set tile color to new color 
 					while (this.tileBoard[row][col].getColorI() == this.tileBoard[row][col-1].getColorI()) {
 						this.tileBoard[row][col].setColorI(random.nextInt(Tile.getArrColors().length));
 					}
 				
 			
-					//if  first in row
+					//if first in row
 				}else if(col == 0) {
 					//start off setting random color
 					this.tileBoard[row][col].setColorI(random.nextInt(Tile.getArrColors().length));
 
-					//only check top
+					//only check top because iteration is top to bottom
+						//meaning tile bellow is unassigned, eliminating unnecessary checks
 					//white tile color = tile above color, set tile color to new color
 					while(this.tileBoard[row][col].getColorI() == this.tileBoard[row-1][col].getColorI()) {
 						this.tileBoard[row][col].setColorI(random.nextInt(Tile.getArrColors().length));
 					}
 				
 				}else {
+				//not first in row and not top row
 					//start off setting random color
 					this.tileBoard[row][col].setColorI(random.nextInt(Tile.getArrColors().length));
 
@@ -116,6 +142,8 @@ public class GameBoard {
 		}
 	}
 	
+	//Assign colors to tiles ensuring that colors do not match cardinal neighbors color. 
+	//Call statically and pass gameBoard Argument 
 	public static void randomizeTileColors(GameBoard gameBoard) {
 		
 		
@@ -173,7 +201,12 @@ public class GameBoard {
 		}
 	}
 
+	//print Tile Colors as either integers or Strings
+	//pass n=0 for integers, pass n=1 for Strings
 	public void printTileColor(int n) {
+	//pass n=0 for integers, pass n=1 for Strings	
+		
+	//print board colors as integers
 		if(n == 0) {
 			for(int i = 0; i < defaultBoardSize; i++) {
 				for(int j = 0; j < defaultBoardSize; j++) {
@@ -188,7 +221,7 @@ public class GameBoard {
 			} 
 		}
 		
-		
+		//print board colors as string
 		if(n == 1) {
 			for(int i = 0; i < defaultBoardSize; i++) {
 				
@@ -205,6 +238,8 @@ public class GameBoard {
 			}
 		}
 	}
+	
+	//print board values of groupedBoard. -1:p1, 0:un-grouped, 1:p2
 	public void printGroupedBoard() {
 		for(int[] i: this.groupedBoard) {
 			for(int j : i) {
@@ -214,8 +249,171 @@ public class GameBoard {
 
 		}
 	}
+	
+	public void playMove(int colorSelected) {
+		if(player1Turn) {
+			this.setP1ColorI(colorSelected);
+		}else {
+			this.setP2ColorI(colorSelected);
+		}
 		
+		//actions called for turn
+		this.setGroupColor(colorSelected);
+		this.group();
+		this.updateScore();
+	}
+	
+	//all CURRENTLY grouped tiles change color to selected color
+	//selected color being argument n
+	public void setGroupColor(int n) {
+		int matchingGroupVal;
+		//assigns the grouping value based of player turn
+		if(player1Turn) {
+			matchingGroupVal = -1;
+		}else {
+			matchingGroupVal = 1;
+		}
+		
+		//iterates through board
+		for(int row = 0; row < this.getBoardSize(); row ++) {
+			for (int col = 0; col < this.getBoardSize(); col++) {
+				
+				//if tile grouping values match, set tile Color to selected color(n)
+				if(matchingGroupVal == this.getGroupedBoard()[row][col]) {
+					this.getTileBoard()[row][col].setColorI(n);
+				}
+			}
+		}
+	}
+	
+	
+	//Assigns neighbors of group, of groupColor, to group
+		public void group() {
+			//??add grouping value for entirely encased tiles to eliminate future checks.
+
+			int matchingGroupVal;
+			//Assigns grouping value based off of player turn 
+			if(player1Turn) {
+				matchingGroupVal = -1;
+			}else {
+				matchingGroupVal = 1;
+			}
+			//iterate through board
+			for(int row =0; row < this.getBoardSize(); row++) {
+				for(int col = 0; col < this.getBoardSize(); col++) {
+					//check if matches grouping val
+					if(this.getGroupedBoard()[row][col] == matchingGroupVal) {
+						//check surrounding tile 
+						
+						//check up if not the first row
+						if(row != 0) {
+							//check unGrouped && same color 
+							if(this.getGroupedBoard()[row - 1][col] == 0 && this.getTileBoard()[row][col].getColorI() == this.getTileBoard()[row -1][col].getColorI()) {
+								this.getGroupedBoard()[row -1][col] = matchingGroupVal;
+								this.getTileBoard()[row -1][col].setGrouped(true);
+
+							}
+						}
+						
+						//check down if not bottom row
+						if(row != this.getBoardSize() -1) {
+							//check unGrouped && same color 
+							if(this.getGroupedBoard()[row +1][col] == 0 && this.getTileBoard()[row][col].getColorI() == this.getTileBoard()[row +1][col].getColorI()) {
+								this.getGroupedBoard()[row+1][col] = matchingGroupVal;
+								this.getTileBoard()[row +1][col].setGrouped(true);
+
+							}
+						}
+						
+						//check left if not first column
+						if(col != 0) {
+							//check unGrouped && same color 
+							if(this.getGroupedBoard()[row][col -1] == 0 && this.getTileBoard()[row][col].getColorI() == this.getTileBoard()[row][col -1].getColorI()) {
+								this.getGroupedBoard()[row][col -1] = matchingGroupVal;
+								this.getTileBoard()[row][col -1].setGrouped(true);
+
+							}
+							
+						}
+						
+						//check right if not last column 
+						if(col != this.getBoardSize() -1) {
+							//check unGrouped && same color 
+							if(this.getGroupedBoard()[row][col +1] == 0 && this.getTileBoard()[row][col].getColorI() == this.getTileBoard()[row][col +1].getColorI()) {
+								this.getGroupedBoard()[row][col +1] = matchingGroupVal;
+								this.getTileBoard()[row][col +1].setGrouped(true);
+							}
+							
+						}
+						
+					}
+				}
+			}
+		}
+	
+		//summates grouped tiles of each player
+		public void updateScore() {
+			//counts elements of grouped board. pertaining to p1 and p2
+			this.p1Score = 0;
+			this.p2Score = 0;
+			for(int[] i : this.getGroupedBoard()) {
+				for(int j : i) {
+					if(j == -1) {
+						this.p1Score ++;
+					}
+					else if(j == 1) {
+						this.p2Score ++;
+						
+					}
+				}
+			}
+		}
+	
+		//print summations of each grouping
+		public void printScore() {
+			System.out.println("|:| P1 Score: " + this.p1Score + " || P2 Score: " + this.p2Score + " |:|");
+		}
+	
+		// -1 p1, 0 onGoing, 1 p2, 2 draw
+		public int getStatus() {
+			int numTiles = (int) Math.pow(this.getBoardSize(),2);
+			if(this.getP1Score() > numTiles /2 ){
+				return -1;
+			}else if(this.getP2Score() > numTiles /2 ) {
+				return 1;
+			}else if(this.getP2Score() == numTiles /2 && this.getP1Score() == numTiles/2) {
+				return 2;
+			}else {
+				return 0;
+			}
+		}
+	
+	
+	
+	
+	
+	
+	
 	//Getters
+
+	public int getMovesplayed() {
+		return this.movesPlayed;
+	}
+	public boolean getPlayer1Turn() {
+		return this.player1Turn;
+	}
+	public int getP1ColorI() {
+		return this.p1ColorI;
+	}
+	public int getP2ColorI() {
+		return this.p2ColorI;
+	}
+	public int getP1Score() {
+		return this.p1Score;
+	}
+	public int getP2Score() {
+		return this.p2Score;
+	}
 	public int getBoardSize() {
 		return this.boardSize;
 	}
@@ -225,6 +423,40 @@ public class GameBoard {
 	public int[][] getGroupedBoard(){
 		return this.groupedBoard;
 	}
+	public GameBoard getGameBoard() {
+		return this;
+	}
+	public List<Integer> getPlayableMoves(){
+		List<Integer> out = new ArrayList<Integer>();
+		for(int i=0; i < Tile.getArrColors().length; i++) {
+			if (i!= p1ColorI && i != p2ColorI) {
+				out.add(i);
+			}
+		}
+		return out;
+	}
 
 	//Setters
+	
+	
+	public void setMovesplayed(int i) {
+		 this.movesPlayed = i;
+	}
+	public void setPlayer1Turn(boolean b) {
+		 this.player1Turn = b;
+	}
+	public void setP1ColorI(int i) {
+		 this.p1ColorI  = i;
+	}
+	public void setP2ColorI(int i) {
+		 this.p2ColorI = i;
+	}
+	public void setP1Score(int i) {
+		 this.p1Score = 1;
+	}
+	public void setP2Score(int i) {
+		 this.p2Score = i;
+	}
+
+
 }
