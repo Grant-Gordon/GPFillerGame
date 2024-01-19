@@ -49,9 +49,21 @@ public class GameBoard {
 		this.randomizeTileColors();
 
 	}
+	//copy constructor 
 	public GameBoard(GameBoard b) {
-		tileBoard = b.getTileBoard();
-		groupedBoard = b.getGroupedBoard();
+		groupedBoard = new int[b.getBoardSize()][b.getBoardSize()];
+		tileBoard = new Tile[b.getBoardSize()][b.getBoardSize()]; 
+		for(int i = 0; i < b.getBoardSize(); i++) {
+			for(int j =0; j < b.getBoardSize(); j++) {
+				tileBoard[i][j] = new Tile(b.getTileBoard()[i][j]);
+			}
+		}
+		//copy groupedBoard
+		for(int i = 0; i < b.getBoardSize(); i++) {
+			for( int j = 0; j < b.getBoardSize(); j++) {
+				groupedBoard[i][j] = b.getGroupedBoard()[i][j];
+			}
+		}
 		boardSize = b.getBoardSize();
 		movesPlayed = b.getMovesplayed();
 		player1Turn = b.getPlayer1Turn();
@@ -140,6 +152,31 @@ public class GameBoard {
 						
 			}
 		}
+		
+		//make starting position fair
+		//players cant start same color
+		//while p1 = p2 randomize
+		while(this.tileBoard[0][this.getBoardSize() -1].getColorI() ==  this.tileBoard[this.getBoardSize()-1][0].getColorI()) {
+			this.tileBoard[this.getBoardSize()-1][0].setColorI(random.nextInt(Tile.getArrColors().length));
+		}
+		//players can't be surrounded by opponent color 
+			//check player 1 surrounded
+		//while p2 == p1 surroundings,  randomize 1 of p1 surroundings
+		while((this.tileBoard[0][this.getBoardSize() -1].getColorI() == this.tileBoard[this.getBoardSize() -2 ][0].getColorI() ) &&  (this.tileBoard[0][this.getBoardSize() -1].getColorI() == this.tileBoard[this.getBoardSize() -1 ][1].getColorI())) {
+			//while [2nd to bottom][0] == surrounding tiles randomize [2nd to bottom][0]
+			while((this.tileBoard[this.getBoardSize() -2 ][0].getColorI() == this.tileBoard[this.getBoardSize() -1 ][0].getColorI()) || (this.tileBoard[this.getBoardSize() -2 ][0].getColorI() == this.tileBoard[this.getBoardSize() -3 ][0].getColorI()) || (this.tileBoard[this.getBoardSize() -2 ][0].getColorI() == this.tileBoard[this.getBoardSize() -2 ][1].getColorI())) {
+				this.tileBoard[this.getBoardSize() -2][0].setColorI(random.nextInt(Tile.getArrColors().length));
+			}
+		}
+		
+		//check p2 surrounded
+		//while p1 == p2 surroundings, randomize 1 of p2 surroundings
+		while((this.tileBoard[this.getBoardSize() -1][0].getColorI() == this.tileBoard[0][this.getBoardSize() -2].getColorI() ) &&  (this.tileBoard[this.getBoardSize() -1][0].getColorI() == this.tileBoard[1][this.getBoardSize() -1].getColorI() )) {
+			//while [1][right most] == surrounding tiles, randomize [1][right most]
+			while((this.tileBoard[1][this.getBoardSize() -1].getColorI() == this.tileBoard[0][this.getBoardSize() -1].getColorI()) || (this.tileBoard[1][this.getBoardSize() -1].getColorI() == this.tileBoard[1][this.getBoardSize() - 2].getColorI()) || (this.tileBoard[1][this.getBoardSize() -1 ].getColorI() == this.tileBoard[2][this.getBoardSize() -1 ].getColorI())) {
+				this.tileBoard[1][this.getBoardSize() - 1].setColorI(random.nextInt(Tile.getArrColors().length));
+			}
+		}		//players shouldn't?? be surrounded by the same color period??? check gamepidgeon logic 
 	}
 	
 	//Assign colors to tiles ensuring that colors do not match cardinal neighbors color. 

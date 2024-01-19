@@ -20,7 +20,11 @@ public class Tile {
 		this.grouped = false;
 
 	}
-
+	public Tile(Tile t) {
+		this.colorI = t.getColorI();
+		this.colorS = t.getColorS();
+		this.grouped = t.getGrouped();
+	}
 	
 	
 	// Setters

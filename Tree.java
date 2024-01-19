@@ -8,7 +8,7 @@ public class Tree {
 	    }
 
 	    public Tree(MCTSNode root) {
-	        this.root = root;
+	        this.root = root; 
 	    }
 
 	    public MCTSNode getRoot() {

@@ -7,6 +7,7 @@ public class AIPlayer {
 	private int opGroupingVal;
 	private static final int WIN_SCORE = 0;
 	private int level;
+	private int counter = 0;
 //	private boolean player1Turn;
 	
 	
@@ -23,21 +24,24 @@ public class AIPlayer {
 	}
 
 	public int pickColorI(GameBoard gameBoard, boolean p1Turn) {
-		//temporary random color selction 
-	//	return rand.nextInt(Tile.getArrColors().length);
+		//temporary random color selection 
+		//return rand.nextInt(Tile.getArrColors().length);
 		
 		//_________________________________________________________________________________
+		
+		GameBoard CPGameBoard = new GameBoard(gameBoard);
+		
 		long start = System.currentTimeMillis();
 		long end = start + 60 * getMillisForCurrentLevel();
 		boolean opponent = !p1Turn;
 		
 		Tree tree = new Tree();
 		MCTSNode rootNode = tree.getRoot();
-		rootNode.getState().setGameBoard(gameBoard);
+		rootNode.getState().setGameBoard(CPGameBoard);
 		rootNode.getState().setPlayer1Turn(p1Turn);
 		
-		while(System.currentTimeMillis() < end ) {
-		
+		while(System.currentTimeMillis() < end || counter  == 0  ) {
+		//while(System.currentTimeMillis() < end && counter > 1) {
 			//selection
 			MCTSNode promisingNode = selectPromisingNode(rootNode);
 			
@@ -55,9 +59,10 @@ public class AIPlayer {
 			
 			//update
 			backProp(nodeToExplore, playoutResult);
-			
+			counter ++;
 		}
-		
+		System.out.println( "\nTimes nodes updated: "+counter + "\n");
+		counter = 0;
 		MCTSNode winnerNode = rootNode.getChildWithMaxScore();
 		tree.setRoot(winnerNode);
 		if(p1Turn) {
