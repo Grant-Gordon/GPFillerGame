@@ -9,12 +9,28 @@ public class MCTSState {
 	private int visitCount;
 	private double winScore;
 	private int groupingVal;
+	 
 	
+	public static boolean compareTo(MCTSState A, MCTSState B) {
+		if(!GameBoard.compareTo(A.getGameBoard(), B.getGameBoard())) {
+			return false;
+		}else if(A.getPlayer1Turn() != B.getPlayer1Turn()) {
+			return false;
+		}else if(A.getVisitCount() != B.getVisitCount()) {
+			return false;
+		}else if (A.getWinScore() != B.getWinScore()) {
+			return false;
+		}else if(A.getGroupingVal() != B.getGroupingVal()) {
+			return false;
+		}else {
+			return true;
+		}
+	}
 	
 	public MCTSState() {
-		board = new GameBoard();
-		setGroupingVal();
+		//setGroupingVal();
 	}
+	//copy Constructor 
 	public MCTSState(MCTSState s) {
 		 this.board = new GameBoard(s.getGameBoard());
 	        this.player1Turn = s.getPlayer1Turn();
@@ -22,6 +38,7 @@ public class MCTSState {
 	        this.winScore = s.getWinScore();
 	        this.setGroupingVal();
 	}
+	//creates state for current gameBoard
 	public MCTSState(GameBoard g) {
 		this.board = new GameBoard(g);
 		this.setGroupingVal();
@@ -44,15 +61,18 @@ public class MCTSState {
 	}
 	
 	public void randomMove() {
-		//play a random move??
+		//TODO random move only plays from playable moves not States playable moves???????
+		//play a random move from playable moves on this/state.baord 
 		List<Integer> playable = board.getPlayableMoves();
 		int moves = playable.size();
 		board.playMove(playable.get((int)(Math.random() * moves)));
 	}
 	
+	//if score is not -INF/lost add score to state win score
 	  public void addScore(double score) {
-	        if (this.winScore != Integer.MIN_VALUE)
-	            this.winScore += score;
+	        if (this.winScore != Integer.MIN_VALUE) {
+	           this.winScore += score;
+	        }
 	    }
 	
 	
@@ -84,6 +104,7 @@ public class MCTSState {
 	}
 	public void setPlayer1Turn(boolean b) {
 		this.player1Turn = b;
+		this.board.setPlayer1Turn(b);
 		setGroupingVal();
 	}
 	public void setVisitCount(int i) {

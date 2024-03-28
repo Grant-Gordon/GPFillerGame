@@ -49,7 +49,7 @@ public class Tile {
 				this.colorI = i;
 			}
 		}
-		if(found == false) {
+		if(!found ) {
 			throw new IllegalArgumentException();
 		}
 	}

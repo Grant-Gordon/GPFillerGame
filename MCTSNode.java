@@ -6,6 +6,17 @@ public class MCTSNode {
 	MCTSNode parent;
 	List<MCTSNode> childArray;
 	
+	//TODO
+	//this shit
+	/*
+	public static boolean compareTo(MCTSNode A, MCTSNode B) {
+		if(!MCTSState.compareTo(A.getState(), B.getState())) {
+			return false;
+		}
+		
+	}
+	*/
+			
 	
 	public MCTSNode() {
 		this.state = new MCTSState();
@@ -54,6 +65,8 @@ public class MCTSNode {
         int selectRandom = (int) (Math.random() * noOfPossibleMoves);
         return this.childArray.get(selectRandom);
     }
+    
+    //returns most visited Node
     public MCTSNode getChildWithMaxScore() {
         return Collections.max(this.childArray, Comparator.comparing(c -> {
             return c.getState().getVisitCount();

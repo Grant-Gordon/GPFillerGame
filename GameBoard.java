@@ -12,24 +12,60 @@ public class GameBoard {
 	private int p2ColorI;
 	private int p1Score =0;
 	private int p2Score =0;
-	
 	 
+	public static boolean compareTo(GameBoard A, GameBoard B) {
+		if(A == null && B == null) {
+			return true;
+		}
+		if(A.getBoardSize() != B.getBoardSize()) {
+			return false;
+		}else if(A.getP1ColorI() != B.getP1ColorI()) {
+				return false;
+		}else if(A.getP2ColorI() != B.getP2ColorI()) {
+				return false;
+		}else if(A.getP1Score() != B.getP1Score()) {
+				return false;
+		}else if (A.getP2Score() != B.getP2Score()) {
+				return false;
+		}else
+			for(int i = 0; i < A.getBoardSize(); i++) {
+				for (int j = 0; j< A.getBoardSize(); j++) {
+					if(A.getTileBoard()[i][j].getColorI() != B.getTileBoard()[i][j].getColorI()) {
+						return false;
+					}else if(A.getTileBoard()[i][j].getGrouped() != B.getTileBoard()[i][j].getGrouped()) {
+						return false;
+					}else if(A.getGroupedBoard()[i][j] != B.getGroupedBoard()[i][j]) {
+						return false;
+					}	
+				}
+			}
+		return true;
+	}
+	  
 
 	//Defualt GameBoard Constructor 
 	public GameBoard() {
 		boardSize = defaultBoardSize;
 		//Pre-populate board with default(64) empty tiles
-			tileBoard = new Tile[defaultBoardSize][defaultBoardSize];
-			groupedBoard = new int[defaultBoardSize][defaultBoardSize];
+		tileBoard = new Tile[defaultBoardSize][defaultBoardSize];
+		//instantiates groupedBoard
+		groupedBoard = new int[defaultBoardSize][defaultBoardSize];
+		//populates tileBoard with default Tiles and assigns all groupings to 0
 		for(int i = 0; i < defaultBoardSize; i++) {
 			for(int j = 0; j < defaultBoardSize; j++) {
 				tileBoard[i][j] = new Tile();
 				groupedBoard[i][j] = 0;
 			}
-		}
+		} 
+		//sets grouping Values
 		groupedBoard[defaultBoardSize -1][0] = -1;
 		groupedBoard[0][defaultBoardSize -1]= 1;
+		//Tiles assinged colors via game Rules
 		this.randomizeTileColors();
+		this.setP2ColorI(this.getTileBoard()[0][this.getBoardSize() -1].getColorI());
+		this.setP1ColorI(this.getTileBoard()[this.getBoardSize() -1][0].getColorI());
+		//set p1 turn
+		this.setPlayer1Turn(true);
 	}
 	//GameBoard Constructor of custom size
 	public  GameBoard(int size){
@@ -47,12 +83,17 @@ public class GameBoard {
 		groupedBoard[size-1][0] = -1;
 		groupedBoard[0][size-1] = 1;
 		this.randomizeTileColors();
+		this.setP2ColorI(this.getTileBoard()[0][this.getBoardSize() -1].getColorI());
+		this.setP1ColorI(this.getTileBoard()[this.getBoardSize() -1][0].getColorI());
+	
+		this.setPlayer1Turn(true);
 
 	}
 	//copy constructor 
 	public GameBoard(GameBoard b) {
 		groupedBoard = new int[b.getBoardSize()][b.getBoardSize()];
 		tileBoard = new Tile[b.getBoardSize()][b.getBoardSize()]; 
+		//copy tileBoard
 		for(int i = 0; i < b.getBoardSize(); i++) {
 			for(int j =0; j < b.getBoardSize(); j++) {
 				tileBoard[i][j] = new Tile(b.getTileBoard()[i][j]);
@@ -189,7 +230,7 @@ public class GameBoard {
 		 * starts at [0][0]
 		 * Like colors cannot touch sides (next to each other on same row or on same column)
 		 * Like colors can share corners/diagonals
-		 */
+		 */ 
 		Random random = new Random();
 				
 		
@@ -489,7 +530,7 @@ public class GameBoard {
 		 this.p2ColorI = i;
 	}
 	public void setP1Score(int i) {
-		 this.p1Score = 1;
+		 this.p1Score = i;
 	}
 	public void setP2Score(int i) {
 		 this.p2Score = i;

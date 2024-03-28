@@ -28,7 +28,6 @@ public class ConsoleTester {
 		board = new GameBoard();
 		board.setP1ColorI(board.getTileBoard()[board.getBoardSize() -1][0].getColorI());
 		board.setP2ColorI(board.getTileBoard()[0][board.getBoardSize()-1].getColorI());
-		board.setPlayer1Turn(true);
 	}
 	
 	public void updatePlaying() {
@@ -75,8 +74,8 @@ public class ConsoleTester {
 			}
 			//AI vs. AI
 		}else {
-			AI1 = new AIPlayer();
-			AI2 = new AIPlayer();
+			AI1 = new AIPlayer(-1);
+			AI2 = new AIPlayer(1);
 		}
 		
 		//print starting board

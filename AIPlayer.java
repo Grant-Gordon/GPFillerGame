@@ -5,7 +5,7 @@ public class AIPlayer {
 	private Random rand = new Random();
 	private int groupingVal;
 	private int opGroupingVal;
-	private static final int WIN_SCORE = 0;
+	private static int winScore = 0;
 	private int level;
 	private int counter = 0;
 //	private boolean player1Turn;
@@ -26,43 +26,57 @@ public class AIPlayer {
 	public int pickColorI(GameBoard gameBoard, boolean p1Turn) {
 		//temporary random color selection 
 		//return rand.nextInt(Tile.getArrColors().length);
-		
 		//_________________________________________________________________________________
-		
+		winScore = (int) Math.pow(gameBoard.getBoardSize(),2);
 		GameBoard CPGameBoard = new GameBoard(gameBoard);
-		
+		//how long AI should search 
 		long start = System.currentTimeMillis();
 		long end = start + 60 * getMillisForCurrentLevel();
-		boolean opponent = !p1Turn;
 		
+		boolean opponent = !p1Turn;
+		 //TODO  blank constructors may cause problems 
 		Tree tree = new Tree();
 		MCTSNode rootNode = tree.getRoot();
 		rootNode.getState().setGameBoard(CPGameBoard);
-		rootNode.getState().setPlayer1Turn(p1Turn);
+		rootNode.getState().setPlayer1Turn(p1Turn);	
 		
 		while(System.currentTimeMillis() < end || counter  == 0  ) {
-		//while(System.currentTimeMillis() < end && counter > 1) {
-			//selection
+			
+		//selection---------------------------------------------------
+			//promising node = highest UCT node in tree
 			MCTSNode promisingNode = selectPromisingNode(rootNode);
 			
-			//expansion
+		//expansion----------------------------------------------------
+			//if game ongoing: 
+				//add all possible game states from node as children nodes
 			if(promisingNode.getState().getGameBoard().getStatus() == 0) {
 				expandNode(promisingNode);
 			}
 			
-			//simulation
+		//simulation--------------------------------------------------
+			
+			//explore highest UCT node
 			MCTSNode nodeToExplore = promisingNode;
 			if(promisingNode.getChildArray().size() > 0) {
+				//explore random child node
 				nodeToExplore = promisingNode.getRandomChildNode();
 			}
+			//return winner of random moves played from nodeToExplore
 			int playoutResult = simPlayout(nodeToExplore);
 			
-			//update
+		//update------------------------------------------------------
+			//update node.state.winscore for all nodes 
 			backProp(nodeToExplore, playoutResult);
 			counter ++;
 		}
+		
+		
 		System.out.println( "\nTimes nodes updated: "+counter + "\n");
 		counter = 0;
+		
+		
+		//TODO WinnerNode = node with most Visits?? 
+		//Shouldn't childWithMaxScore Return highest state WINscore???
 		MCTSNode winnerNode = rootNode.getChildWithMaxScore();
 		tree.setRoot(winnerNode);
 		if(p1Turn) {
@@ -75,7 +89,7 @@ public class AIPlayer {
 	
 	
 	
-	
+	//return node of highest UCT starting at root node
 	private MCTSNode selectPromisingNode(MCTSNode rootNode) {
 		MCTSNode node = rootNode;
 		while (node.getChildArray().size() != 0) {
@@ -84,44 +98,87 @@ public class AIPlayer {
 		return node;
 	}
 
-	
+	//creates new nodes for all possible new states from node. 
 	private void expandNode(MCTSNode node) {
 		List<MCTSState> possibleStates = node.getState().getAllStates();
 		possibleStates.forEach(state -> {
+			//create child node for all possible states from node
 			MCTSNode newNode = new MCTSNode(state);
 			newNode.setParent(node);
+			//switch turns 
 			newNode.getState().setPlayer1Turn(!node.getState().getPlayer1Turn());
 			node.getChildArray().add(newNode);
 		});
 	}
 	
-	private void backProp(MCTSNode nodeToExplore, int groupVal) {
+	//grouping val is winner of simPlayout
+	private void backProp(MCTSNode nodeToExplore, int playoutStatus) {
 		MCTSNode tempNode = nodeToExplore;
+		//while tempNode != rootNode in Tree
 		while(tempNode != null) {
+			//Increment visit Count
 			tempNode.getState().setVisitCount(tempNode.getState().getVisitCount() +1);
-			if(tempNode.getState().getGroupingVal() != groupVal) {
-				tempNode.getState().addScore(WIN_SCORE);
+			//if grouping val = simPlauout winner. nodeValue = winScore
+			if(tempNode.getState().getGroupingVal() == playoutStatus) {
+				
+				tempNode.getState().addScore(winScore);
+			}else if (tempNode.getState().getGroupingVal() * -1 == playoutStatus) { // if simPlayout Winner = opponent
+				tempNode.getState().addScore(Integer.MIN_VALUE);
+				//if simulation ongoing
+			}else if (playoutStatus == 0) {
+				//if state is P1 turn 
+				if(tempNode.getState().getPlayer1Turn() ) {
+					//if AI is P1
+					if(this.groupingVal == -1) {
+						//add P1 score to nodeVal
+						tempNode.getState().addScore(tempNode.getState().getGameBoard().getP1Score());
+					}
+					//if AI is P2
+					if(this.groupingVal == 1) {
+						//subtract P1 score to nodeVal
+						tempNode.getState().addScore(-1 * tempNode.getState().getGameBoard().getP1Score());
+					}
+				}else { //if State is P2
+					//if AI is P1
+					if(this.groupingVal == -1) {
+						//subtract P2 score from nodeVal
+						tempNode.getState().addScore(-1 * tempNode.getState().getGameBoard().getP2Score());
+					}
+					//if AI is P2
+					if(this.groupingVal == 1) {
+						//add P2 score to node val
+						tempNode.getState().addScore(tempNode.getState().getGameBoard().getP2Score());
+					}
+					//tempNode.getState().addScore(tempNode.getState().getGameBoard().getP1Score());
+				}
+				
 			}
 			tempNode=tempNode.getParent();
 		}
 	}
 	
-	//-1 if p1, 0 if in progress, 1 if p2, 2 if draw, no clue what else this does. 
+	//returns winner of game after random moves starting at node. 
 	private int simPlayout(MCTSNode node) {
 		MCTSNode tempNode = new MCTSNode(node);
-		MCTSState tempState = tempNode.getState();
+		//TODO
+		MCTSState tempState =  tempNode.getState();
 		int boardStatus = tempState.getGameBoard().getStatus();
 		
+		//if state.board has opponent winning state's winScore = MIN_VALUE
 		if(boardStatus == this.opGroupingVal) {
 			tempNode.getParent().getState().setWinScore(Integer.MIN_VALUE);
+			//return this node loses
 			return boardStatus;
 		}
 		//while in progress
 		while(boardStatus == 0) {
 			tempState.setPlayer1Turn(!tempState.getPlayer1Turn());
+			//plays move on state.board
 			tempState.randomMove();
+			//update status if random move results in a win. 
 			boardStatus = tempState.getGameBoard().getStatus();
 		}
+		//return winner of this node from playing random moves
 		return boardStatus;
 	}
 	
